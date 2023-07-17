@@ -3,10 +3,23 @@ import 'package:flutter_todo_app/constants/colors.dart';
 import 'package:flutter_todo_app/model/todo.dart';
 import 'package:flutter_todo_app/widgets/todo_item.dart';
 
-class Home extends StatelessWidget {
+class Home extends StatefulWidget {
   Home({Key? key}) : super(key: key);
 
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
   final TodosList = Todo.todoList();
+  final _todoController = TextEditingController();
+  List<Todo> _foundTodo = [];
+
+  @override
+  void initState() {
+    _foundTodo = TodosList;
+    super.initState();
+  }
 
   @override 
   Widget build(BuildContext context) {
@@ -17,7 +30,7 @@ class Home extends StatelessWidget {
         children: [
           Container(
             padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-            child: Stack(
+            child: Column(
               children: [
                 searchBox(),
                 Expanded(
@@ -25,7 +38,7 @@ class Home extends StatelessWidget {
                     children: [
                       Container(
                         margin: EdgeInsets.only(
-                          top: 60, 
+                          top: 30, 
                           bottom: 20),
                         child: Text(
                           'All Todos',
@@ -35,8 +48,12 @@ class Home extends StatelessWidget {
                           ),
                         ),  
                       ),
-                      for ( Todo todo in TodosList) 
-                        TodoItem(todo: todo)
+                      for ( Todo todo in _foundTodo.reversed) 
+                        TodoItem(
+                          todo: todo,
+                          onTodoChange: _handleTodoChange,
+                          onDeleteItem: _deleteTodoItem,
+                        )
                     ],
                   ),
                 )
@@ -62,6 +79,7 @@ class Home extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10)
                       ) ,
                       child: TextField(
+                        controller: _todoController,
                         decoration: InputDecoration (
                           hintText: 'add new todo item',
                           border: InputBorder.none
@@ -73,7 +91,9 @@ class Home extends StatelessWidget {
                   margin: EdgeInsets.only(bottom: 20, right: 20),
                   child: ElevatedButton(
                     child: Text('+', style: TextStyle(fontSize:  40,),),
-                    onPressed: () {},
+                    onPressed: () {
+                      _addTodoItem(_todoController.text);
+                    },
                     style: ElevatedButton.styleFrom(
                       primary: tdBlue,
                       elevation: 10,
@@ -89,15 +109,54 @@ class Home extends StatelessWidget {
     );
   }
 
+void _handleTodoChange(Todo todo) { 
+  setState(() {
+    todo.isDone = !todo.isDone;
+  });
+
+}
+
+void _deleteTodoItem(String id) {
+  setState(() {
+    TodosList.removeWhere((item) => item.id == id);
+  });
+}
+
+void _addTodoItem(String itemName) {
+  setState(() {
+    TodosList.add(Todo(id: DateTime.now().millisecondsSinceEpoch.toString(), TodoText: itemName));
+  });
+  _todoController.clear();
+}
+
+void _runFilter(String enteredKeyword) {
+  List<Todo> results = [];
+  if(enteredKeyword.isEmpty) {
+    results = TodosList;
+  }
+  else {
+    results = TodosList
+      .where((item) => item.TodoText!
+          .toLowerCase()
+          .contains(enteredKeyword.toLowerCase()))
+      .toList();
+  }
+
+  setState(() {
+    _foundTodo = results;
+  });
+}
+
 Widget searchBox() {
   return Container(
-    padding: EdgeInsets.symmetric(horizontal: 20),
+    padding: const EdgeInsets.symmetric(horizontal: 15),
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(20)
     ),
     child: TextField( 
-      decoration: InputDecoration(
+      onChanged: (value) => _runFilter(value),
+      decoration: const InputDecoration(
         contentPadding:  EdgeInsets.all(0),
         prefixIcon:  Icon(
           Icons.search,
@@ -109,7 +168,7 @@ Widget searchBox() {
           minWidth: 25
         ),
         border: InputBorder.none,
-        hintText: 'search',
+        hintText: 'search here',
         hintStyle: TextStyle(
           color: tdGrey
         ) 
@@ -125,20 +184,21 @@ Widget searchBox() {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-        Icon(
-          Icons.menu,
-          color: tdBlack,
-          size: 30,
-        ),
-        Container(
-          height: 40,
-          width: 40,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image.asset('assets/images/avatar.png'),
+          const Icon(
+            Icons.menu,
+            color: tdBlack,
+            size: 30,
           ),
-        )
-      ],),
+          Container(
+            height: 40,
+            width: 40,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.asset('assets/images/avatar.png'),
+            ),
+          )
+        ]
+      ),
     );
   }
 }

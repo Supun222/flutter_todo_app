@@ -16,7 +16,7 @@ class Todo {
       Todo(id: '3', TodoText: 'Check mails'),
       Todo(id: '4', TodoText: 'Team meeting'),
       Todo(id: '5', TodoText: 'Work on mobile apps for 2 hours'),
-      Todo(id: '5', TodoText: 'Making preworkout meal', isDone: true),
+      Todo(id: '6', TodoText: 'Making preworkout meal', isDone: true),
     ];
   }
 }
